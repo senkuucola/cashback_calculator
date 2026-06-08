@@ -1,5 +1,10 @@
-"""Математическая модель выбора оптимальной карты."""
+"""
+Математическая модель выбора оптимальной карты.
+Целевая функция: максимизация итогового кэшбэка.
+Ограничение: кэшбэк ≤ лимит карты.
+"""
 
+# База данных карт
 CARDS_DATABASE = [
     {
         'name': 'Карта "Супермаркет+"',
@@ -22,20 +27,49 @@ CARDS_DATABASE = [
 ]
 
 
-def find_best_card(purchases):
+def calculate_card_cashback(purchases, card):
+    """Расчёт кэшбэка для конкретной карты."""
+    total = 0.0
+    details = {}
+
+    for category, amount in purchases:
+        rate = card['rates'].get(category, card['rates'].get('другое', 0.5))
+        cash = amount * rate / 100.0
+        details[category] = details.get(category, 0.0) + cash
+        total += cash
+
+    if total > card['limit']:
+        total = card['limit']
+
+    return total, details
+
+
+def find_best_card(purchases, cards=None):
+    """Находит карту с максимальным кэшбэком."""
+    if cards is None:
+        cards = CARDS_DATABASE
+
     best_card = None
     best_cashback = -1.0
+    best_details = None
+    all_results = []
 
-    for card in CARDS_DATABASE:
-        total = 0.0
-        for category, amount in purchases:
-            rate = card['rates'].get(category, card['rates'].get('другое', 0.5))
-            total += amount * rate / 100.0
-        if total > card['limit']:
-            total = card['limit']
+    for card in cards:
+        cashback, details = calculate_card_cashback(purchases, card)
+        all_results.append({
+            'name': card['name'],
+            'cashback': cashback,
+            'limit': card['limit']
+        })
 
-        if total > best_cashback:
-            best_cashback = total
+        if cashback > best_cashback:
+            best_cashback = cashback
             best_card = card['name']
+            best_details = details
 
-    return {'best_card': best_card, 'best_cashback': best_cashback}
+    return {
+        'best_card': best_card,
+        'best_cashback': best_cashback,
+        'best_details': best_details,
+        'all_results': all_results
+    }

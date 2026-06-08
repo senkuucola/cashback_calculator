@@ -1,5 +1,6 @@
 """Модуль основной логики расчёта кэшбэка."""
 
+# Базовые проценты по категориям
 BASE_RATES = {
     'супермаркеты': 1.0,
     'аптеки': 3.0,
@@ -11,6 +12,17 @@ BASE_RATES = {
 
 
 def calculate_cashback(purchases, bonuses, limit):
+    """
+    Рассчитывает кэшбэк.
+
+    Args:
+        purchases: list of (category, amount)
+        bonuses: dict {category: extra_percent}
+        limit: float
+
+    Returns:
+        dict: {'details': dict, 'total': float, 'limit_remaining': float}
+    """
     details = {}
     total = 0.0
 
@@ -21,6 +33,7 @@ def calculate_cashback(purchases, bonuses, limit):
         details[category] = details.get(category, 0.0) + cash
         total += cash
 
+    # Применяем лимит
     if total > limit:
         total = limit
 
